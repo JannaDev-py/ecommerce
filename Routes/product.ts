@@ -28,7 +28,7 @@ export async function connectionDB (){
     }
 } 
 
-let connection: mysql.Connection
+export let connection: mysql.Connection
 
 const s3 = new S3Client({
     region: process.env.AWS_REGION as string,
@@ -66,14 +66,18 @@ ProductRouter.use(async (req: Request, res: Response, next) => {
 ProductRouter.get('/', async (req: Request, res: Response) => {
     try{
         const data = await connection.query('SELECT id, image_url, name, description, price, stock FROM products')
+        connection.end()
         res.json(data)
     }catch{
-        res.json({ "message": "error fetching products "})
+        connection.end()
+        res.status(500).json({ "message": "error fetching products "})
     }
 })
+
 ProductRouter.post('/', validateToken, validateAdmin, validateProductData, upload.single('image'), async (req: Request, res: Response) => {
     if(!req.file){
         res.status(400).json({ "message": "No image file provided" })
+        connection.end()
         return
     }
     const fileKey = `products/${Date.now()}-${req.file.originalname}`
@@ -88,6 +92,7 @@ ProductRouter.post('/', validateToken, validateAdmin, validateProductData, uploa
         await uploadToS3(command)
     }catch(e){
         res.status(500).json({ "message": "error uploading file to s3" })
+        connection.end()
         return
     }
     try{
@@ -96,9 +101,11 @@ ProductRouter.post('/', validateToken, validateAdmin, validateProductData, uploa
         await connection.query('INSERT INTO products ( image_url, name, description, price, stock) VALUES (?, ?, ?, ?, ?)', 
             [ fileKey, name, description, price, stock] )
         connection.commit()
+        connection.end()
         res.sendStatus(200)
     }catch{
         connection.rollback()
+        connection.end()
         res.json({ "message": "error creating product "})
     }
 })
@@ -111,6 +118,7 @@ ProductRouter.patch('/:id', validateToken, validateAdmin, validateProductDataPar
         connection.beginTransaction()
         connection.query('UPDATE products SET ? WHERE id = ?', [req.body, id])
         connection.commit()
+        connection.end()
         res.sendStatus(200)
     }catch{
         connection.rollback()
@@ -123,6 +131,7 @@ ProductRouter.delete('/:id', validateToken, validateAdmin, async (req: Request, 
         connection.beginTransaction()
         await connection.query('DELETE FROM products WHERE id = ?', [id])
         connection.commit()
+        connection.end()
         res.sendStatus(200)
     }catch{
         connection.rollback()

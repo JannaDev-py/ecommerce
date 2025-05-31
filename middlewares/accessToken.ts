@@ -2,6 +2,7 @@ import { CognitoJwtVerifier } from 'aws-jwt-verify'
 import { Request, Response, NextFunction } from 'express'
 import dotenv from 'dotenv'
 import { customRequest } from '../interfaces/interface'
+import { connection } from '../Routes/product'
 dotenv.config()
 
 const verifier = CognitoJwtVerifier.create({
@@ -22,6 +23,7 @@ export async function validateToken(req: Request, res: Response, next: NextFunct
             res.end()
         }
     }else {
+        connection.end()
         res.status(400).json({"message": "token missing"})
         res.end()
     }
@@ -31,6 +33,7 @@ export async function validateAdmin(req: Request, res: Response, next: NextFunct
     if((req as customRequest).user === process.env.ADMIN_ID_COGNITO){
         next()
     }else {
+        connection.end()
         res.status(403).json({"message": "forbidden"})
         res.end()
     }

@@ -1,5 +1,6 @@
 import zod from 'zod'
 import { NextFunction, Request, Response } from 'express'
+import { connection } from '../Routes/product'
 
 const productDataSchema = zod.object({
     name: zod.string().min(1, 'Product name is required'),
@@ -13,6 +14,7 @@ export type ProductData = zod.infer<typeof productDataSchema>
 export function validateProductData(req: Request, res: Response, next: NextFunction) {
     const result = productDataSchema.safeParse(req.body)
     if (!result.success) {
+    connection.end()
         res.status(400).json({
             message: 'Invalid product data',
             errors: result.error.errors,
@@ -26,6 +28,7 @@ export function validateProductDataPartial(req: Request, res: Response, next: Ne
     const partialSchema = productDataSchema.partial()
     const result = partialSchema.safeParse(req.body)
     if (!result.success) {
+        connection.end()
         res.status(400).json({
             message: 'Invalid product data',
             errors: result.error.errors,
