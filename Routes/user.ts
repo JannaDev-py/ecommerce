@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import dotenv from 'dotenv'
 import axios from 'axios'
-import { urlRedirectCognito } from '../config/config.js'
+import { urlRedirectCognito } from '../config/config'
 
 export const UserRouter = Router()
 dotenv.config()
@@ -13,7 +13,12 @@ UserRouter.get('/confirm', (req: Request, res: Response)=>{
     res.sendStatus(200) 
 })
 
-UserRouter.get('/tokens', (req: Request, res: Response) => {
+UserRouter.put('/tokens', (req: Request, res: Response) => {
+    if(!req.body || !req.body.code){
+        res.status(400).json({"message": "missing code"})
+        return
+    }
+
     const { code } = req.body
 
     const data = new URLSearchParams({
@@ -62,6 +67,7 @@ UserRouter.get('/refresh', (req: Request, res: Response) => {
 
     if(!refresh_token){
         res.status(400).json({"message": "missing credentials"})
+        return
     }
 
     const data = new URLSearchParams({

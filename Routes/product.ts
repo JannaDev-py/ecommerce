@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express'
-import mysql from 'mysql2/promise'
+import mysql from 'mysql2'
 import dotenv from 'dotenv'
-import { validateToken, validateAdmin } from '../middlewares/accessToken.js'
-import { validateProductData, validateProductDataPartial } from '../middlewares/productData.js'
+import { validateToken, validateAdmin } from '../middlewares/accessToken'
+import { validateProductData, validateProductDataPartial } from '../middlewares/productData'
 import multer from 'multer'
 import {
   PutObjectCommand,
@@ -14,12 +14,21 @@ dotenv.config()
 
 const upload = multer({ storage: multer.memoryStorage() }) 
 
-const connection = await mysql.createConnection({ 
-    host: process.env.DB_HOST as string,
-    user: 'admin',
-    password: process.env.DB_PASSWORD as string,
-    database: "ecommerce"
-})
+function connectionDB (){
+    try{
+        const connection = mysql.createConnection({
+            host: process.env.DB_HOST as string,
+            user: 'admin',
+            password: process.env.DB_PASSWORD as string,
+            database: "ecommerce"
+        })
+        return connection
+    }catch{
+        throw new Error("Error connecting to the database")
+    }
+} 
+
+const connection = connectionDB()
 
 const s3 = new S3Client({
     region: process.env.AWS_REGION as string,
@@ -80,14 +89,14 @@ ProductRouter.post('/', validateToken, validateAdmin, validateProductData, uploa
     }
 
     try{
-        connection.beginTransaction()
+        connection.beginTransaction(()=>{})
         const { name, description, price, stock } = req.body
         await connection.query('INSERT INTO products ( image_url, name, description, price, stock) VALUES (?, ?, ?, ?, ?)', 
             [ fileKey, name, description, price, stock] )
         connection.commit()
         res.sendStatus(200)
     }catch{
-        connection.rollback()
+        connection.rollback(()=>{})
         res.json({ "message": "error creating product "})
     }
 })
@@ -100,12 +109,12 @@ ProductRouter.patch('/:id', validateToken, validateAdmin, validateProductDataPar
     }
 
     try{
-        connection.beginTransaction()
+        connection.beginTransaction(()=>{})
         connection.query('UPDATE products SET ? WHERE id = ?', [req.body, id])
         connection.commit()
         res.sendStatus(200)
     }catch{
-        connection.rollback()
+        connection.rollback(()=>{})
         res.json({ "message": "error updating product "})
     }
 })
@@ -114,12 +123,12 @@ ProductRouter.delete('/:id', validateToken, validateAdmin, async (req: Request, 
     const { id } = req.params
 
     try{
-        connection.beginTransaction()
+        connection.beginTransaction(()=>{})
         await connection.query('DELETE FROM products WHERE id = ?', [id])
         connection.commit()
         res.sendStatus(200)
     }catch{
-        connection.rollback()
+        connection.rollback(()=>{})
         res.json({ "message": "error deleting product "})
     }
 })

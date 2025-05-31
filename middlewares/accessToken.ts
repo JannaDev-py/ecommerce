@@ -1,7 +1,7 @@
 import { CognitoJwtVerifier } from 'aws-jwt-verify'
 import { Request, Response, NextFunction } from 'express'
 import dotenv from 'dotenv'
-import { customRequest } from '../interfaces/interface.js'
+import { customRequest } from '../interfaces/interface'
 dotenv.config()
 
 const verifier = CognitoJwtVerifier.create({
