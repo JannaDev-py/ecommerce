@@ -9,8 +9,8 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/api/user', UserRouter)
-// app.use('/api/product', ProductRouter)
+app.use('/api/product', ProductRouter)
 
-app.listen(3000, () => {
+export const server = app.listen(3000, () => {
   console.log('Server is running on port 3000')
 })

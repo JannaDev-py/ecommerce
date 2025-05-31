@@ -1,5 +1,17 @@
 import supertest from 'supertest'
-import { app } from '../app'
+import { app, server } from '../app'
+import { connectionDB } from '../Routes/product'
+
+let connection: any
+
+beforeAll(async () => {
+    connection = await connectionDB()
+})
+
+afterAll(() => {
+    server.close()
+    connection.end()
+})
 
 describe('User APIs tests with bad request', () => {
     test("it should return 400 because there is no refresh token", async ()=>{
