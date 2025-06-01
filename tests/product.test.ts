@@ -32,7 +32,6 @@ async function getAuthCodeCognito() {
 
     await page.waitForNavigation()
     const url = page.url()
-    console.log(url)
     const authCode = new URL(url).searchParams.get("code")
 
     await browser.close();
@@ -49,13 +48,16 @@ describe('Product API Tests', () => {
     const agentAdmin = supertest.agent(app)
     test('should return the response with cookies', async () => {
         const code = await getAuthCodeCognito()
-        console.log(code)
+    
         const response = await agentAdmin.put('/api/user/tokens').send({
             code,
         })
-    
+
+        expect(response.headers["set-cookie"]).toHaveLength(2);
+        expect(response.headers["set-cookie"][0]).toContain("refreshToken");
+        expect(response.headers["set-cookie"][1]).toContain("accessToken");
         expect(response.status).toBe(200)
-    })
+    }, 10000)
 
     test('should create a product', async ()=>{
         const response = await agentAdmin.post('/api/product')
@@ -67,6 +69,7 @@ describe('Product API Tests', () => {
         expect(response.status).toBe(201)
     })
 })
+
 describe('Product API Tests with bad request', () => {
     test('should return 400 when no token provided', async ()=>{
         const response = await supertest(app).post('/api/product')

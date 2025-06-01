@@ -1,2 +1,3 @@
 export const urlRedirectCognito = 'https://github.com/JannaDev-py/JS-Highlight-Janna'
-export const cognitoLoginUrl = 'https://us-east-2das0cbdxm.auth.us-east-2.amazoncognito.com/login?client_id=41bim4ps29njohmjvn2da26f09&redirect_uri=https://localhost:5000/&response_type=code&scope=email+openid+phone'
+export const cognitoLoginUrl = 'https://us-east-2das0cbdxm.auth.us-east-2.amazoncognito.com/login?client_id=41bim4ps29njohmjvn2da26f09&response_type=code&scope=email+openid+phone&redirect_uri=https%3A%2F%2Fgithub.com%2FJannaDev-py%2FJS-Highlight-Janna'
+export const cognitoDomain = 'https://us-east-2das0cbdxm.auth.us-east-2.amazoncognito.com'

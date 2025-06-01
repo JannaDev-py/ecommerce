@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import dotenv from 'dotenv'
 import axios from 'axios'
-import { urlRedirectCognito } from '../config/config'
+import { cognitoDomain, urlRedirectCognito } from '../config/config'
 
 export const UserRouter = Router()
 dotenv.config()
@@ -24,12 +24,12 @@ UserRouter.put('/tokens', (req: Request, res: Response) => {
     const data = new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: process.env.CLIENT_ID_COGNITO as string,
-        client_secret: process.env.CLIENT_SECRET_COGNITO as string,
+        client_secret: process.env.SECRET_CLIENT_COGNITO as string,
         code,
         redirect_uri: urlRedirectCognito
     }) 
 
-    axios.post('https://us-east-2das0cbdxm.auth.us-east-2.amazoncognito.com/auth2/token', data.toString(), {
+    axios.post(cognitoDomain + '/oauth2/token', data, {
         headers:{
             'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -52,6 +52,7 @@ UserRouter.put('/tokens', (req: Request, res: Response) => {
         res.sendStatus(200)
     })
     .catch(e => {
+        console.log(e)
         res.status(400).json({"message": "invalid code"})
     })
 })
@@ -73,11 +74,11 @@ UserRouter.get('/refresh', (req: Request, res: Response) => {
     const data = new URLSearchParams({
         grant_type: 'refresh_token',
         client_id: process.env.CLIENT_ID_COGNITO as string,
-        client_secret: process.env.CLIENT_SECRET_COGNITO as string,
+        client_secret: process.env.SECRET_CLIENT_COGNITO as string,
         refresh_token,
     })
 
-    axios.post('https://us-east-2das0cbdxm.auth.us-east-2.amazoncognito.com/auth2/token', data.toString(), {
+    axios.post(cognitoDomain + '/oauth2/token', data.toString(), {
         headers:{
             'Content-Type': 'application/x-www-form-urlencoded'
         }
