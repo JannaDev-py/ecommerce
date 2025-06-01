@@ -8,7 +8,7 @@ dotenv.config()
 
 UserRouter.get('/confirm', (req: Request, res: Response)=>{
     if(!req.cookies.refreshToken){
-        res.status(400).json({"message": "you need to login again"})
+        res.status(400).json({"message": "you need to login"})
     }
     res.sendStatus(200) 
 })

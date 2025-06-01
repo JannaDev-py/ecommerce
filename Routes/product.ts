@@ -102,7 +102,7 @@ ProductRouter.post('/', validateToken, validateAdmin, validateProductData, uploa
             [ fileKey, name, description, price, stock] )
         connection.commit()
         connection.end()
-        res.sendStatus(200)
+        res.sendStatus(201)
     }catch{
         connection.rollback()
         connection.end()

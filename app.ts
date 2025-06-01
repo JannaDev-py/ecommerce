@@ -11,4 +11,4 @@ app.use(cookieParser())
 app.use('/api/user', UserRouter)
 app.use('/api/product', ProductRouter)
 
-export const server = app.listen(3000)
+export const server = app.listen(0)
