@@ -31,11 +31,6 @@ async function getAuthCodeCognito() {
 }
 
 describe('Product API Tests', () => {
-    test('should return all products', async ()=>{
-        const response = await supertest(app).get('/api/product')
-        expect(response.status).toBe(200)
-    })
-
     const agentAdmin = supertest.agent(app)
     test('should return the response with cookies', async () => {
         const code = await getAuthCodeCognito()
@@ -58,6 +53,20 @@ describe('Product API Tests', () => {
             .field('stock', 10)
             .attach('image', 'tests/test-image.jpg')
         expect(productResponse.status).toBe(201)
+    })
+    
+    let productId: number
+    test('should return all products', async ()=>{
+        const response = await supertest(app).get('/api/product')
+        productId = response.body[0].id
+        expect(response.status).toBe(200)
+    })
+
+    test('should update a product', async ()=>{
+        const response = await agentAdmin.patch(`/api/product/${productId}`)
+        .field('name', 'updated test')
+        
+        expect(response.status).toBe(200)
     })
 })
 

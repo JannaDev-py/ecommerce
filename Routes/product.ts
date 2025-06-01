@@ -5,9 +5,11 @@ import { validateToken, validateAdmin } from '../middlewares/accessToken'
 import { validateProductData, validateProductDataPartial } from '../middlewares/productData'
 import multer from 'multer'
 import {
-  PutObjectCommand,
-  S3Client,
-  S3ServiceException,
+    PutObjectCommand,
+    DeleteObjectCommand,
+    S3Client,
+    S3ServiceException,
+    waitUntilObjectNotExists
 } from "@aws-sdk/client-s3";
 
 dotenv.config()
@@ -61,7 +63,7 @@ ProductRouter.get('/', async (req: Request, res: Response) => {
     try{
         const data = await connection.query('SELECT id, image_url, name, description, price, stock FROM products')
         connection.end()
-        res.json(data)
+        res.json(data[0])
     }catch{
         connection.end()
         res.status(500).json({ "message": "error fetching products "})
@@ -106,9 +108,10 @@ ProductRouter.post('/', validateToken, validateAdmin, upload.single('image'), va
     }
 })
 
-ProductRouter.patch('/:id', validateToken, validateAdmin, validateProductDataPartial, async (req: Request, res: Response) => {
+ProductRouter.patch('/:id', validateToken, validateAdmin, upload.single('image'), validateProductDataPartial, async (req: Request, res: Response) => {
     const connection = await connectionDB()
     const { id } = req.params
+    console.log(req.body)
     if(!req.body){
         res.status(400).json({ "message": "No data provided for update" })
     }
