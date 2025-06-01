@@ -26,9 +26,7 @@ export async function connectionDB (){
     }catch{
         throw new Error("Error connecting to the database")
     }
-} 
-
-export let connection: mysql.Connection
+}
 
 const s3 = new S3Client({
     region: process.env.AWS_REGION as string,
@@ -58,12 +56,8 @@ async function uploadToS3(command: PutObjectCommand) {
 
 export const ProductRouter = Router()
 
-ProductRouter.use(async (req: Request, res: Response, next) => {
-    connection = await connectionDB()
-    next()
-})
-
 ProductRouter.get('/', async (req: Request, res: Response) => {
+    const connection = await connectionDB()
     try{
         const data = await connection.query('SELECT id, image_url, name, description, price, stock FROM products')
         connection.end()
@@ -74,7 +68,8 @@ ProductRouter.get('/', async (req: Request, res: Response) => {
     }
 })
 
-ProductRouter.post('/', validateToken, validateAdmin, validateProductData, upload.single('image'), async (req: Request, res: Response) => {
+ProductRouter.post('/', validateToken, validateAdmin, upload.single('image'), validateProductData, async (req: Request, res: Response) => {
+    const connection = await connectionDB()
     if(!req.file){
         res.status(400).json({ "message": "No image file provided" })
         connection.end()
@@ -95,6 +90,7 @@ ProductRouter.post('/', validateToken, validateAdmin, validateProductData, uploa
         connection.end()
         return
     }
+
     try{
         connection.beginTransaction()
         const { name, description, price, stock } = req.body
@@ -103,13 +99,15 @@ ProductRouter.post('/', validateToken, validateAdmin, validateProductData, uploa
         connection.commit()
         connection.end()
         res.sendStatus(201)
-    }catch{
+    }catch(e){
         connection.rollback()
         connection.end()
         res.json({ "message": "error creating product "})
     }
 })
+
 ProductRouter.patch('/:id', validateToken, validateAdmin, validateProductDataPartial, async (req: Request, res: Response) => {
+    const connection = await connectionDB()
     const { id } = req.params
     if(!req.body){
         res.status(400).json({ "message": "No data provided for update" })
@@ -125,7 +123,9 @@ ProductRouter.patch('/:id', validateToken, validateAdmin, validateProductDataPar
         res.json({ "message": "error updating product "})
     }
 })
+
 ProductRouter.delete('/:id', validateToken, validateAdmin, async (req: Request, res: Response) => {
+    const connection = await connectionDB()
     const { id } = req.params
     try{
         connection.beginTransaction()

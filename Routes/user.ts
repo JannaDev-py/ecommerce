@@ -40,19 +40,18 @@ UserRouter.put('/tokens', (req: Request, res: Response) => {
 
         res.cookie('refreshToken', refresh_token, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "none",
         })
         res.cookie('accessToken', access_token, {
             httpOnly: true,
-            secure: true,
+            secure: false,
             sameSite: "none",
         })
 
         res.sendStatus(200)
     })
     .catch(e => {
-        console.log(e)
         res.status(400).json({"message": "invalid code"})
     })
 })

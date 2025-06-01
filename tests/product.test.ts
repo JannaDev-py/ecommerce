@@ -1,21 +1,13 @@
 import supertest, { agent } from 'supertest'
 import { app, server } from '../app'
-import { connectionDB } from '../Routes/product'
 import dotenv from 'dotenv'
 import { cognitoLoginUrl } from '../config/config'
 import puppeteer from "puppeteer"
 
-let connection: any
-
 dotenv.config()
-
-beforeAll(async () => {
-    connection = await connectionDB()
-})
 
 afterAll(async () => {
     await server.close()
-    await connection.end()
 })
 
 
@@ -38,7 +30,6 @@ async function getAuthCodeCognito() {
     return authCode;
 }
 
-
 describe('Product API Tests', () => {
     test('should return all products', async ()=>{
         const response = await supertest(app).get('/api/product')
@@ -60,19 +51,19 @@ describe('Product API Tests', () => {
     }, 10000)
 
     test('should create a product', async ()=>{
-        const response = await agentAdmin.post('/api/product')
-        .field('name', 'test')
-        .field('description', 'test')
-        .field('price', '10')
-        .field('stock', '10')
-        .attach('image', 'tests/test-image.jpg')
-        expect(response.status).toBe(201)
+        const productResponse = await agentAdmin.post('/api/product/')
+            .field('name', 'test')
+            .field('description', 'test')
+            .field('price', 10)
+            .field('stock', 10)
+            .attach('image', 'tests/test-image.jpg')
+        expect(productResponse.status).toBe(201)
     })
 })
 
 describe('Product API Tests with bad request', () => {
     test('should return 400 when no token provided', async ()=>{
-        const response = await supertest(app).post('/api/product')
+        const response = await supertest(app).post('/api/product/')
         expect(response.body.message).toBe('token missing')
         expect(response.status).toBe(400)
     })
