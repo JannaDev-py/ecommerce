@@ -3,6 +3,7 @@ import { app, server } from '../app'
 import dotenv from 'dotenv'
 import { cognitoLoginUrl } from '../config/config'
 import puppeteer from "puppeteer"
+import { file } from 'zod/v4'
 
 dotenv.config()
 
@@ -56,15 +57,24 @@ describe('Product API Tests', () => {
     })
     
     let productId: number
+    let fileKey: string
     test('should return all products', async ()=>{
         const response = await supertest(app).get('/api/product')
         productId = response.body[0].id
+        fileKey = response.body[0].image_url
         expect(response.status).toBe(200)
     })
 
     test('should update a product', async ()=>{
         const response = await agentAdmin.patch(`/api/product/${productId}`)
         .field('name', 'updated test')
+        
+        expect(response.status).toBe(200)
+    })
+
+    test('should delete a product', async ()=>{
+        const response = await agentAdmin.delete(`/api/product/${productId}`)
+        .send({ fileKey })
         
         expect(response.status).toBe(200)
     })

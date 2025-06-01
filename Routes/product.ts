@@ -111,7 +111,6 @@ ProductRouter.post('/', validateToken, validateAdmin, upload.single('image'), va
 ProductRouter.patch('/:id', validateToken, validateAdmin, upload.single('image'), validateProductDataPartial, async (req: Request, res: Response) => {
     const connection = await connectionDB()
     const { id } = req.params
-    console.log(req.body)
     if(!req.body){
         res.status(400).json({ "message": "No data provided for update" })
     }
@@ -123,6 +122,7 @@ ProductRouter.patch('/:id', validateToken, validateAdmin, upload.single('image')
         res.sendStatus(200)
     }catch{
         connection.rollback()
+        connection.end()
         res.json({ "message": "error updating product "})
     }
 })
@@ -130,6 +130,31 @@ ProductRouter.patch('/:id', validateToken, validateAdmin, upload.single('image')
 ProductRouter.delete('/:id', validateToken, validateAdmin, async (req: Request, res: Response) => {
     const connection = await connectionDB()
     const { id } = req.params
+    if(!id){
+        res.status(400).json({ "message": "No product ID provided" })
+        return
+    }
+
+    const fileKey = req.body.fileKey
+
+    try{
+        await s3.send(
+            new DeleteObjectCommand({
+                Bucket: process.env.AWS_BUCKET_NAME as string,
+                Key: fileKey,
+            })
+        )
+        await waitUntilObjectNotExists(
+        { client: s3, maxWaitTime: 60 },
+        { 
+            Bucket: process.env.AWS_BUCKET_NAME as string, 
+            Key: fileKey 
+        })
+    }catch{
+        res.status(500).json({ "message": "error deleting file from s3" })
+        return
+    }
+
     try{
         connection.beginTransaction()
         await connection.query('DELETE FROM products WHERE id = ?', [id])
@@ -138,6 +163,7 @@ ProductRouter.delete('/:id', validateToken, validateAdmin, async (req: Request, 
         res.sendStatus(200)
     }catch{
         connection.rollback()
+        connection.end()
         res.json({ "message": "error deleting product "})
     }
 })
